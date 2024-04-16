@@ -1,0 +1,411 @@
+use student_management_system_db1;
+show tables;
+
+insert into students (first_name,last_name,date_of_birth,email,phone_number)
+values
+('harry','potter','2003-03-13','harry@gmail.com','45454545'),
+('hermoine','granger','2003-04-10','hermoine@gmail.com','565656'),
+('ron','weasley','2005-10-03','ron@gmail.com','989898'),
+('albus','dumbledore','2004-08-26','albus@gmail.com','232323');
+
+
+insert into payments (amount,payment_date,students_id)
+values 
+(10000,'2024-04-02',1),
+(13000,'2024-03-03',2),
+(3000,'2024-03-12',1),
+(15000,'2024-03-21',3),
+(11000,'2024-03-12',4);
+
+insert into teacher (first_name, last_name, email)
+values
+('James', 'Smith', 'james.smith@example.com'),
+('Emily', 'Johnson', 'emily.johnson@example.com'),
+('Michael', 'Williams', 'michael.williams@example.com');
+
+insert into courses (course_name,credits,teacher_id)
+values
+('Java Programming', 120 ,2),
+('Python Programming', 80 ,2),
+('Selenium Admin', 60 ,3),
+('Network Admin', 70,1),
+('MY SQL',75,1);
+
+insert into enrollments (enrollment_date,students_id,courses_id)
+values
+('2024-03-01', 1, 1), 
+('2024-03-15', 2, 1),
+('2024-03-10', 3, 3), 
+('2024-03-05', 4, 4), 
+('2024-03-20', 1, 2);
+
+-- 1)write a sql query to insert a new student into student table
+insert into students (first_name,last_name,date_of_birth,email,phone_number)
+values
+('jhon','Doe','1985-08-15','jhondoe@example.com','1234567890');
+
+select * from students;
+/*output:
+'1', 'harry', 'potter', '2003-03-13', 'harry@gmail.com', '45454545'
+'2', 'hermoine', 'granger', '2003-04-10', 'hermoine@gmail.com', '565656'
+'3', 'ron', 'weasley', '2005-10-03', 'ron@gmail.com', '989898'
+'4', 'albus', 'dumbledore', '2004-08-26', 'albus@gmail.com', '232323'
+'5', 'jhon', 'Doe', '1985-08-15', 'jhondoe@example.com', '1234567890'
+*/
+
+-- 2)write a query to enroll a course for existing student (inserting jhon,doe)
+insert into enrollments(enrollment_date,students_id,courses_id)
+values
+('2024-03-26',5,5);
+
+select * from enrollments;
+/*output:
+# id, enrollment_date, students_id, courses_id
+'1', '2024-03-01', '1', '1'
+'2', '2024-03-15', '2', '1'
+'3', '2024-03-10', '3', '3'
+'4', '2024-03-05', '4', '4'
+'5', '2024-03-20', '1', '2'
+'6', '2024-03-26', '5', '5'
+*/
+
+-- 3)Update email address of a specific teacher 
+
+Update teacher 
+SET email='emily@gmail.com'
+where id=2;
+select * from teacher;
+/*output:
+# id, first_name, last_name, email
+'1', 'James', 'Smith', 'james.smith@example.com'
+'2', 'Emily', 'Johnson', 'emily@gmail.com'
+'3', 'Michael', 'Williams', 'michael.williams@example.com'
+*/
+
+-- 4)sql query to delete a specific enrollement record
+delete from enrollments
+where students_id =2 and courses_id=1;
+select * from enrollments;
+
+-- 5)update courses table to assign a specific teacher to a course
+update courses
+SET teacher_id=3
+where course_name='Python programming';
+
+-- 6)delete a student from table and remove their enrollment records from enrollment table
+delete from students
+where first_name='hermoine';
+delete from enrollments
+where students_id=2;
+select * from students;
+
+-- 7)update or modify the payment amount  in payment records
+update payments
+SET amount=17000
+where id=4;
+select * from payments;
+
+/*
+1	10000	2024-04-02	1
+2	13000	2024-03-03	2
+3	3000	2024-03-12	1
+4	17000	2024-03-21	3
+5	11000	2024-03-12	4			
+*/
+
+-- TASK 3
+-- 1)Write a sql query to display total amount by a specific student
+-- projection:payment
+-- criteria :student
+select s.first_name,sum(p.amount) as 'Total Amount' 
+from payments p
+JOIN students s ON s.id=p.students_id
+group by s.first_name
+having s.first_name='harry';
+/*
+output:
+# first_name, Total Amount
+'harry', '13000'
+*/
+
+-- 2)Write a sql query to list courses and number of students enrolled in all cources
+-- projection :courses,students
+-- criteria   :enrollment
+select c.course_name,count(s.id) as 'Num of students'
+from courses c 
+JOIN enrollments e ON c.id=e.courses_id
+JOIN students s ON e.students_id=s.id
+Group by c.course_name;
+
+/* 
+output:
+# course_name, Num of students
+'Java Programming', '1'
+'MY SQL', '1'
+'Network Admin', '1'
+'Python Programming', '1'
+'Selenium Admin', '1'
+*/
+
+-- 3)write query to display students without any enrollment
+select * from 
+students
+where id NOT IN(select e.students_id from 
+				students s JOIN enrollments e ON
+				s.id=e.students_id); 
+/* output:
+2	hermoine	granger	2003-04-10	hermoine@gmail.com	565656
+*/
+ 
+ -- 4) write an sql query to return first name last name and name of the courses they enrolled in 
+ select s.first_name,s.last_name,c.course_name from 
+ students s  LEFT JOIN enrollments e ON s.id=e.students_id 
+			 LEFT JOIN courses c ON e.courses_id=c.id
+			 Group by c.course_name;
+/*
+output:
+# first_name, last_name, course_name
+'hermoine', 'granger', NULL
+'harry', 'potter', 'Java Programming'
+'jhon', 'Doe', 'MY SQL'
+'albus', 'dumbledore', 'Network Admin'
+'harry', 'potter', 'Python Programming'
+'ron', 'weasley', 'Selenium Admin'
+
+*/
+ 
+ -- 5) write an Sql query to return names of teachers and courses they are assigned to
+ select t.first_name,t.last_name ,c.course_name from
+ teacher t JOIN courses c ON t.id=c.teacher_id;
+ /*
+ output:
+ # first_name, last_name, course_name
+'Emily', 'Johnson', 'Java Programming'
+'Michael', 'Williams', 'Python Programming'
+'Michael', 'Williams', 'Selenium Admin'
+'James', 'Smith', 'Network Admin'
+'James', 'Smith', 'MY SQL'
+*/
+ -- 6)Retrive the list of students and thier enrollment details for a specific course
+ select CONCAT(s.first_name,s.last_name) as full_name,e.enrollment_date,c.course_name   from 
+ students s  JOIN enrollments e ON s.id=e.students_id 
+			 JOIN courses c ON e.courses_id=c.id
+             where c.course_name='Java Programming';
+             
+/*
+output:
+# full_name, enrollment_date, course_name
+'harrypotter', '2024-03-01', 'Java Programming'
+*/
+
+-- 7) Fnd the names of students who have not made any payments
+select * 
+from students
+where id NOT IN(select p.students_id from
+				students s JOIN payments p ON s.id=p.students_id);
+
+/*
+ouput:
+ '5', 'jhon', 'Doe', '1985-08-15', 'jhondoe@example.com', '1234567890'
+*/
+
+-- 8)write an sql query to retrive courses with no enrollment
+select * from 
+courses
+where id NOT IN (select e.courses_id from courses c 
+				 LEFT JOIN enrollments e ON c.id=e.courses_id);
+/*
+output:
+# id, course_name, credits, teacher_id
+ null  null        null     null
+ */
+ 
+-- 9)select students who have enrolled in more than one course
+
+select CONCAT(s.first_name,s.last_name) as full_name , count(e.id) as num_of_enrollment from 
+students s JOIN enrollments e ON
+s.id=e.students_id
+group by s.first_name
+having (count(e.id))>1;
+
+/*
+output:
+# full_name, num_of_enrollment
+'harrypotter', '2'
+*/
+-- 10)select for teachers with null course assignments
+select * from 
+teacher t LEFT JOIN courses c  ON t.id=c.teacher_id
+where c.id is NULL;
+
+/*
+output:
+id, first_name, last_name, email, id, course_name, credits, teacher_id
+*/
+
+
+-- TASK 4
+--  1)calculate average number of students registered in each course
+select c.course_name, avg(e.students_id) as average
+from enrollments e
+join courses c on e.courses_id = c.id
+group by c.course_name;
+/*
+output:
+# course_name, average
+'Java Programming', '1.0000'
+'MY SQL', '5.0000'
+'Network Admin', '4.0000'
+'Python Programming', '1.0000'
+'Selenium Admin', '3.0000'
+*777
+*/
+-- 2)sql query to retrieve students with maximum amount payed
+select *
+from students s join payments p on p.students_id = s.id
+ where p.amount = (select max(amount) from payments);
+/*
+# id, first_name, last_name, date_of_birth, email, phone_number, id, amount, payment_date, students_id
+'3', 'ron', 'weasley', '2005-10-03', 'ron@gmail.com', '989898', '4', '17000', '2024-03-21', '3'
+*/
+--
+/*3. Retrieve a list of courses with the highest number of enrollments.
+ Use subqueries to find the course(s) with the maximum enrollment count.*/
+select c.course_name, count(*) as enrollment_count
+from courses c
+join enrollments e on e.courses_id = c.id
+group by c.course_name
+order by enrollment_count desc;
+/*
+output:
+# course_name, enrollment_count
+'Java Programming', '1'
+'Python Programming', '1'
+'Selenium Admin', '1'
+'Network Admin', '1'
+'MY SQL', '1'
+*/
+/*4. Calculate the total payments made to courses taught by each teacher Use subqueries to sum payments for each teacher's courses. */
+select t.*, sum(p.amount) as total_payment
+from payments p
+join students s on p.students_id = s.id
+join enrollments e on s.id = e.students_id
+join courses c on e.courses_id = c.id
+join teacher t on t.id = c.teacher_id
+group by t.id;
+/*
+output:
+# id, first_name, last_name, email, total_payment
+'1', 'James', 'Smith', 'james.smith@example.com', '11000'
+'2', 'Emily', 'Johnson', 'emily@gmail.com', '13000'
+'3', 'Michael', 'Williams', 'michael.williams@example.com', '30000'
+*/
+/*5. Identify students who are enrolled in all available courses.
+Use subqueries to compare a student's enrollments with the total number of courses.*/
+select e.students_id
+from students s
+join enrollments e on s.id = e.students_id
+join courses c on e.courses_id = c.id
+group by s.id
+having count(distinct e.courses_id) = (select count(*) from courses);
+/*output:
+students_id
+
+/*
+/*6.Retrieve the names Of teachers who have not been assigned to any courses. Use subqueries to
+find teachers with no course assignments
+*/
+select CONCAT(first_name,last_name) as teacher_name from
+teacher
+where id NOT IN(select c.teacher_id from
+				teacher t JOIN courses c ON t.id=c.teacher_id);
+/*
+output:
+teacher_name
+*/
+-- 7)Calculate average age of all student
+
+-- 8.Identify courses with no enrollments. use subqueries to find courses without enrollment records.
+select * from
+courses 
+where id NOT IN (select e.courses_id from 
+				courses c JOIN enrollments e ON c.id=e.courses_id);
+/*
+output:
+# id, course_name, credits, teacher_id
+ null  null        null     null
+ */
+
+/*9.Calculate the total payments made by each student for each course they are enrolled in. use
+subqueries and aegrcgatc functions to sum payments.*/
+select distinct CONCAT(s.first_name,s.last_name) as full_name,c.course_name,sum(p.amount) 
+from students s 
+JOIN payments p ON s.id=p.students_id
+JOIN enrollments e ON s.id=e.students_id
+JOIN courses c ON e.courses_id=c.id 
+group by s.id,c.id;
+/*
+output:
+harrypotter	Java Programming	13000
+harrypotter	Python Programming	13000
+ronweasley	Selenium Admin	17000
+albusdumbledore	Network Admin	11000
+*/
+
+/*10. Identify students who have made more than one payment. use subqueries and aggregate
+functions to count payments per student and filter for those with counts greater than one.
+*/
+select CONCAT(s.first_name,s.last_name) as full_name ,count(p.id) as payment_count from students s 
+JOIN payments p ON s.id=p.students_id
+group by s.id
+having count(p.id)>1;
+/*
+output:
+# full_name, payment_count
+'harrypotter', '2'
+/*
+
+/*11. Write an SQL query to calculate the total payments made by each student. Join the "Students"
+table with the "Payments" table and use GROUP BY to calculate the sum of payments for each
+student.*/
+select s.*,sum(amount) as 'total_balance'
+from students s 
+JOIN payments p ON s.id=p.students_id
+group by s.id;
+/*
+output:
+# id, first_name, last_name, date_of_birth, email, phone_number, total_balance
+'1', 'harry', 'potter', '2003-03-13', 'harry@gmail.com', '45454545', '13000'
+'2', 'hermoine', 'granger', '2003-04-10', 'hermoine@gmail.com', '565656', '13000'
+'3', 'ron', 'weasley', '2005-10-03', 'ron@gmail.com', '989898', '17000'
+'4', 'albus', 'dumbledore', '2004-08-26', 'albus@gmail.com', '232323', '11000'
+*/
+-- 12. Retrieve a list of course names along with the count of students enrolled in each course. Use
+-- JOIN operations between the "Courses" table and the "Enrollments" table and GROUP BY to
+-- count enrollments.
+select c.course_name,count(e.id) from 
+courses c JOIN enrollments e ON c.id=e.courses_id
+group by c.course_name;
+/*
+output:
+# course_name, count(e.id)
+'Java Programming', '1'
+'MY SQL', '1'
+'Network Admin', '1'
+'Python Programming', '1'
+'Selenium Admin', '1'
+*/
+-- 13. Calculate the average payment amount made by students. Use JOIN operations between the "Students" table and the "Payments" table and GROUP BY to calculate the average.
+
+select CONCAT(s.first_name,s.last_name) as full_name,AVG(p.amount) as avg_payment from students s 
+JOIN payments p ON s.id=p.students_id
+group by s.id;
+
+/*
+output:
+# full_name, avg_payment
+'harrypotter', '6500.0000'
+'hermoinegranger', '13000.0000'
+'ronweasley', '17000.0000'
+'albusdumbledore', '11000.0000'
+*/
